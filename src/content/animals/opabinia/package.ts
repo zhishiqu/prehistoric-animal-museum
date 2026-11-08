@@ -37,9 +37,9 @@ export const animalDefinition = {
     "shadow": "none",
     "toneMappingExposure": 1.08,
     "cameraLightScale": 1.05,
-    viewAzimuthDegrees: -77.1,
+    viewAzimuthDegrees: 107.1,
     viewDistanceScale: 1,
-    viewPolarDegrees: 82.8,
+    viewPolarDegrees: 78.4,
   },
   "animation": {
     "clip": "Idle",

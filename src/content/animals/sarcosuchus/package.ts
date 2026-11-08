@@ -9,13 +9,16 @@ export const animalDefinition = definePublishedAnimal({
   "habitat": "land",
   "atmosphere": "forest",
   "presentation": {
-  "initialYawDegrees": -160,
-  "safeAreaPadding": 0.14,
-  "portraitSafeAreaPadding": 0.14,
-  "toneMappingExposure": 1.08,
-  "preciseBounds": true,
-  "shadow": "ground"
-},
+    "initialYawDegrees": -160,
+    "safeAreaPadding": 0.14,
+    "portraitSafeAreaPadding": 0.14,
+    "toneMappingExposure": 1.08,
+    "preciseBounds": true,
+    "shadow": "ground",
+    viewAzimuthDegrees: -57.9,
+    viewDistanceScale: 1,
+    viewPolarDegrees: 77.3,
+  },
   "animation": {
   "clip": "Idle",
   "loop": "repeat",

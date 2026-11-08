@@ -36,7 +36,10 @@ export const animalDefinition = {
     "preciseBounds": true,
     "shadow": "none",
     "toneMappingExposure": 1.08,
-    "cameraLightScale": 1.05
+    "cameraLightScale": 1.05,
+    viewAzimuthDegrees: -63.7,
+    viewDistanceScale: 1,
+    viewPolarDegrees: 81.3,
   },
   "animation": {
     "clip": "Idle",

@@ -9,13 +9,16 @@ export const animalDefinition = definePublishedAnimal({
   "habitat": "water",
   "atmosphere": "underwater",
   "presentation": {
-  "initialYawDegrees": -155,
-  "safeAreaPadding": 0.14,
-  "portraitSafeAreaPadding": 0.14,
-  "toneMappingExposure": 1.08,
-  "preciseBounds": true,
-  "shadow": "none"
-},
+    "initialYawDegrees": -155,
+    "safeAreaPadding": 0.14,
+    "portraitSafeAreaPadding": 0.14,
+    "toneMappingExposure": 1.08,
+    "preciseBounds": true,
+    "shadow": "none",
+    viewAzimuthDegrees: 139.6,
+    viewDistanceScale: 1,
+    viewPolarDegrees: 88.6,
+  },
   "animation": {
   "clip": "Idle",
   "loop": "repeat",

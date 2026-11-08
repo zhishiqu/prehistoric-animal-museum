@@ -9,13 +9,16 @@ export const animalDefinition = definePublishedAnimal({
   "habitat": "air",
   "atmosphere": "air",
   "presentation": {
-  "initialYawDegrees": -130,
-  "safeAreaPadding": 0.14,
-  "portraitSafeAreaPadding": 0.18,
-  "toneMappingExposure": 1.08,
-  "preciseBounds": true,
-  "shadow": "none"
-},
+    "initialYawDegrees": -130,
+    "safeAreaPadding": 0.14,
+    "portraitSafeAreaPadding": 0.18,
+    "toneMappingExposure": 1.08,
+    "preciseBounds": true,
+    "shadow": "none",
+    viewAzimuthDegrees: -125.7,
+    viewDistanceScale: 1,
+    viewPolarDegrees: 84.8,
+  },
   "animation": {
   "clip": "Idle",
   "loop": "repeat",

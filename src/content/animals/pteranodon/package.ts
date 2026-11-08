@@ -16,6 +16,9 @@ export const animalDefinition = definePublishedAnimal({
     safeAreaPadding: 0.05,
     shadow: 'none',
     toneMappingExposure: 1.35,
+    viewAzimuthDegrees: -75.3,
+    viewDistanceScale: 1,
+    viewPolarDegrees: 129.2,
   },
   animation: {
     clip: 'Idle',

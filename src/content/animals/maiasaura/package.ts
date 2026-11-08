@@ -25,6 +25,9 @@ export const animalDefinition = definePublishedAnimal({
     shadowHorizontalOffset: -0.98,
     shadowYOffset: -0.04,
     toneMappingExposure: 1.08,
+    viewAzimuthDegrees: -63.5,
+    viewDistanceScale: 1,
+    viewPolarDegrees: 83.4,
   },
   animation: {
     clip: 'Idle',
