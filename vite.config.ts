@@ -25,6 +25,7 @@ import { readSkyExpansionReviewManifest } from './scripts/sky-expansion-review'
 import { saveSkyReviewCapture } from './scripts/sky-review-capture'
 import { saveSkyMotionRecording } from './scripts/sky-review-recording'
 import { saveMotionReviewCapture } from './scripts/motion-review-capture'
+import { saveAnimalPresentation } from './scripts/animal-presentation-save'
 import { resolve } from 'node:path'
 
 const redistributableNotices = [
@@ -373,6 +374,27 @@ function privateLocalMaterialGuard(): Plugin {
   }
 }
 
+function animalPresentationWriter(): Plugin {
+  return {
+    name: 'animal-presentation-writer',
+    configureServer(server) {
+      server.middlewares.use((request, response, next) => {
+        const requestUrl = request.url
+        if (!requestUrl) {
+          next()
+          return
+        }
+        const pathname = new URL(requestUrl, 'http://localhost').pathname
+        if (pathname !== '/__museum-animal-presentation') {
+          next()
+          return
+        }
+        void saveAnimalPresentation(request, response)
+      })
+    },
+  }
+}
+
 export default defineConfig(async ({ command, mode }) => {
   assertReviewModeIsServeOnly(command, mode)
   const env = loadEnv(mode, process.cwd(), '')
@@ -409,6 +431,7 @@ export default defineConfig(async ({ command, mode }) => {
       bundledNotices(mode === 'e2e' || env.MUSEUM_FLIGHT === '1', canonicalCatalog.notices),
       multilingualSeoPlugin({}, mode === 'release-candidate' ? resolve('.handoff/expansion-12/release-fix/integration/candidate-social') : undefined),
       privateLocalMaterialGuard(),
+      animalPresentationWriter(),
       localReview(
         command === 'serve' &&
           (mode === 'review' || mode === 'development'),

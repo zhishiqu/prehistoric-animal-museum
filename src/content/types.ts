@@ -126,6 +126,13 @@ export interface AnimalPresentation {
    */
   readonly shadowYOffset?: number
   readonly toneMappingExposure?: number
+  /**
+   * Visitor-saved orbit applied on top of the fitted camera. Azimuth is
+   * relative to the fitted front view; polar and distance are absolute.
+   */
+  readonly viewAzimuthDegrees?: number
+  readonly viewPolarDegrees?: number
+  readonly viewDistanceScale?: number
 }
 
 export interface AnimalAnimation {

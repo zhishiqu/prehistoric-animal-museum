@@ -51,6 +51,17 @@ export function createViewerModelDescriptor(
         ),
       },
       preciseBounds: animal.presentation.preciseBounds ?? false,
+      ...(animal.presentation.viewAzimuthDegrees === undefined ||
+      animal.presentation.viewPolarDegrees === undefined ||
+      animal.presentation.viewDistanceScale === undefined
+        ? {}
+        : {
+            view: {
+              azimuthDegrees: animal.presentation.viewAzimuthDegrees,
+              polarDegrees: animal.presentation.viewPolarDegrees,
+              distanceScale: animal.presentation.viewDistanceScale,
+            },
+          }),
       shadow: {
         depthOffset: animal.presentation.shadowDepthOffset ?? 0,
         ...(animal.presentation.shadowDepthScale === undefined

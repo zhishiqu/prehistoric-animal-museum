@@ -41,6 +41,7 @@ import {
   PerspectiveCamera,
   Scene,
   Sphere,
+  Spherical,
   SRGBColorSpace,
   Texture,
   Vector3,
@@ -1193,6 +1194,8 @@ export function resetStagedModelPose(
     StagedViewerModel,
     'action' | 'descriptor' | 'mixer' | 'modelRoot'
   >,
+  presentation: ViewerModelDescriptor['presentation'] = staged.descriptor
+    .presentation,
 ): void {
   staged.action?.reset().play()
   staged.mixer?.setTime(0)
@@ -1202,8 +1205,8 @@ export function resetStagedModelPose(
   // Dilophosaurus compare → exhibit → focus direction flip.
   staged.modelRoot.rotation.set(
     0,
-    MathUtils.degToRad(staged.descriptor.presentation.initialYawDegrees),
-    MathUtils.degToRad(staged.descriptor.presentation.initialRotationZDegrees ?? 0),
+    MathUtils.degToRad(presentation.initialYawDegrees),
+    MathUtils.degToRad(presentation.initialRotationZDegrees ?? 0),
   )
   staged.modelRoot.updateMatrixWorld(true)
 }
@@ -1461,6 +1464,12 @@ export class ViewerController {
   }
 
   private current: StagedViewerModel | null = null
+  /** Fitted camera spherical before any saved orbit is applied. */
+  private fittedCameraPose: {
+    azimuth: number
+    polar: number
+    distance: number
+  } | null = null
   private destroyed = false
   private reducedMotion = this.reducedMotionQuery.matches
   private resumeRotationAt = 0
@@ -3800,6 +3809,72 @@ export class ViewerController {
   }
 
   /**
+   * Captures the user's current orbit so it can be persisted and restored.
+   * Azimuth is relative to the fitted front view; polar and distance are
+   * absolute for the current composition.
+   */
+  captureCurrentView(): {
+    azimuthDegrees: number
+    polarDegrees: number
+    distanceScale: number
+  } | null {
+    const fitted = this.fittedCameraPose
+    if (!fitted) {
+      return null
+    }
+    const offset = this.camera.position.clone().sub(this.controls.target)
+    const spherical = new Spherical().setFromVector3(offset)
+    const azimuthDelta = Math.atan2(
+      Math.sin(spherical.theta - fitted.azimuth),
+      Math.cos(spherical.theta - fitted.azimuth),
+    )
+    const distanceScale =
+      fitted.distance > 0 ? spherical.radius / fitted.distance : 1
+    const round = (value: number, digits: number) => {
+      const factor = 10 ** digits
+      return Math.round(value * factor) / factor
+    }
+    return {
+      azimuthDegrees: Math.min(
+        180,
+        Math.max(-180, round(MathUtils.radToDeg(azimuthDelta), 1)),
+      ),
+      polarDegrees: Math.min(
+        179,
+        Math.max(1, round(MathUtils.radToDeg(spherical.phi), 1)),
+      ),
+      distanceScale: Math.min(2.25, Math.max(0.2, round(distanceScale, 3))),
+    }
+  }
+
+  private applySavedCameraView(
+    presentation: ViewerModelDescriptor['presentation'],
+  ): void {
+    const saved = presentation.view
+    const fitted = this.fittedCameraPose
+    if (!saved || !fitted) {
+      return
+    }
+    const radius = Math.min(
+      this.controls.maxDistance,
+      Math.max(
+        this.controls.minDistance,
+        fitted.distance * saved.distanceScale,
+      ),
+    )
+    const spherical = new Spherical(
+      radius,
+      MathUtils.degToRad(saved.polarDegrees),
+      fitted.azimuth + MathUtils.degToRad(saved.azimuthDegrees),
+    )
+    this.camera.position
+      .copy(this.controls.target)
+      .add(new Vector3().setFromSpherical(spherical))
+    this.camera.lookAt(this.controls.target)
+    this.controls.update()
+  }
+
+  /**
    * Freezes the active clip at an exact time for deterministic local-review
    * and end-to-end screenshots. Passing null resumes normal playback.
    * ViewerStage only exposes this hook in Vite's `review`, `model-still`, and
@@ -5615,15 +5690,16 @@ export class ViewerController {
       Math.round(compositionHeight),
     )
     const isPortrait = compositionHeight > compositionWidth
+    const presentation = current.descriptor.presentation
     const configuredPadding = isPortrait
-      ? current.descriptor.presentation.safeAreaPadding.portrait
-      : current.descriptor.presentation.safeAreaPadding.landscape
+      ? presentation.safeAreaPadding.portrait
+      : presentation.safeAreaPadding.landscape
     const configuredHorizontalOffset = isPortrait
-      ? (current.descriptor.presentation.horizontalOffset?.portrait ?? 0)
-      : (current.descriptor.presentation.horizontalOffset?.landscape ?? 0)
+      ? (presentation.horizontalOffset?.portrait ?? 0)
+      : (presentation.horizontalOffset?.landscape ?? 0)
     const configuredVerticalOffset = isPortrait
-      ? (current.descriptor.presentation.verticalOffset?.portrait ?? 0)
-      : (current.descriptor.presentation.verticalOffset?.landscape ?? 0)
+      ? (presentation.verticalOffset?.portrait ?? 0)
+      : (presentation.verticalOffset?.landscape ?? 0)
     const modelViewport = this.container.closest<HTMLElement>(
       '.model-viewport',
     )
@@ -5659,6 +5735,13 @@ export class ViewerController {
     this.camera.near = fit.near
     this.camera.far = fit.far
     this.camera.position.copy(fit.position)
+    const fittedOffset = fit.position.clone().sub(fit.target)
+    const fittedSpherical = new Spherical().setFromVector3(fittedOffset)
+    this.fittedCameraPose = {
+      azimuth: fittedSpherical.theta,
+      polar: fittedSpherical.phi,
+      distance: fittedSpherical.radius,
+    }
     const viewOffset = computeCompositionViewOffset({
       compositionHeight,
       compositionLeft,
@@ -5694,6 +5777,7 @@ export class ViewerController {
     this.controls.minDistance = fit.distance * zoomProfile.minDistanceFactor
     this.controls.maxDistance = fit.distance * 2.25
     this.controls.update()
+    this.applySavedCameraView(presentation)
     this.controls.enableDamping = previousDamping
     this.controls.autoRotate = previousAutoRotate
   }

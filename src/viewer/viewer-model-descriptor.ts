@@ -20,6 +20,11 @@ export interface ViewerModelDescriptor {
       portrait: number
     }
     preciseBounds?: boolean
+    view?: {
+      azimuthDegrees: number
+      polarDegrees: number
+      distanceScale: number
+    }
     shadow: {
       depthOffset?: number
       depthScale?: number

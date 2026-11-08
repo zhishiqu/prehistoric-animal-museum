@@ -52,6 +52,10 @@ const zhCN = {
   collectionShort: '全馆',
   resetView: '恢复初始视角',
   resetDone: '已经恢复初始视角。',
+  saveView: '保存当前视角',
+  viewSaved: '已保存当前视角，下次会按这个视角渲染。',
+  viewSavedLocally: '已保存到本机，但源码写入失败，请检查开发服务器。',
+  saveViewFailed: '当前视角保存失败，请稍后再试。',
   focusView: '专注看模型',
   focusEntered: '已进入模型专注模式，轻点画面或按 Escape 返回完整界面。',
   focusReturnHint: '轻点画面即可返回',
@@ -254,6 +258,11 @@ const en = {
   collectionShort: 'All',
   resetView: 'Reset the view',
   resetDone: 'The view has been reset.',
+  saveView: 'Save the current view',
+  viewSaved: 'Current view saved. It will be used next time.',
+  viewSavedLocally:
+    'Saved on this device, but the source write failed. Check the dev server.',
+  saveViewFailed: 'The current view could not be saved. Try again.',
   focusView: 'Focus on the model',
   focusEntered:
     'Model focus mode is open. Tap the scene or press Escape to return.',

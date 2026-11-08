@@ -13,6 +13,7 @@ import {
   Minimize2,
   Pause,
   RotateCcw,
+  Save,
   Share2,
   Scaling,
   Volume2,
@@ -55,6 +56,7 @@ import {
 import { ResponsiveAnimalTitle } from './components/ResponsiveAnimalTitle'
 import { SceneAtmosphere } from './components/SceneAtmosphere'
 import { ViewerStage } from './components/ViewerStage'
+import { applySavedAnimalView, writeSavedAnimalView } from './viewer/saved-view'
 const MotionReviewRecorder = import.meta.env.MODE === 'review'
   ? lazy(() => import('./review/MotionReviewRecorder'))
   : null
@@ -439,6 +441,10 @@ function narrationUrlFor(
   return null
 }
 
+const localPresentationOverridesEnabled =
+  import.meta.env.MODE === 'development' ||
+  import.meta.env.MODE === 'production'
+
 function toRuntimeAnimal(
   animal: RenderableAnimalPackage,
   locale: Locale,
@@ -526,12 +532,22 @@ function toRuntimeAnimal(
       backgroundPortrait: animal.assets.backgrounds?.portrait ?? '',
       narration: narrationUrlFor(animal, locale),
     },
-    viewer: createViewerModelDescriptor(
-      animal,
-      content.name,
-      animal.assets.model,
-      messagesFor(locale).viewer.modelLabel(content.name),
-    ),
+    viewer: localPresentationOverridesEnabled
+      ? applySavedAnimalView(
+          createViewerModelDescriptor(
+            animal,
+            content.name,
+            animal.assets.model,
+            messagesFor(locale).viewer.modelLabel(content.name),
+          ),
+          animal.id,
+        )
+      : createViewerModelDescriptor(
+          animal,
+          content.name,
+          animal.assets.model,
+          messagesFor(locale).viewer.modelLabel(content.name),
+        ),
   }
 }
 
@@ -806,10 +822,12 @@ function MuseumApp({
   readonly rootFallback?: boolean
 }) {
   const { locale, messages } = useI18n()
+  const [presentationRevision, setPresentationRevision] = useState(0)
+  const [saveViewToast, setSaveViewToast] = useState<string | null>(null)
   const e2eFixturesEnabled = useMemo(() => readE2EFixturesEnabled(), [])
   const productionAnimals = useMemo(
     () => publishedMainAnimals.map((animal) => toRuntimeAnimal(animal, locale)),
-    [locale],
+    [locale, presentationRevision],
   )
   const defaultAnimal =
     productionAnimals[0] ?? toRuntimeAnimal(defaultPackage!, locale)
@@ -1008,6 +1026,44 @@ function MuseumApp({
   useEffect(() => {
     activeAnimalRef.current = activeAnimal
   }, [activeAnimal])
+  const saveCurrentView = async () => {
+    const view = viewerControllerRef.current?.captureCurrentView()
+    const showToast = (toastMessage: string) => {
+      setSaveViewToast(toastMessage)
+      setLiveMessage(toastMessage)
+      window.setTimeout(() => setSaveViewToast(null), 2400)
+    }
+    if (!view) {
+      showToast(messages.saveViewFailed)
+      return
+    }
+    writeSavedAnimalView(activeAnimal.id, view)
+    setPresentationRevision((revision) => revision + 1)
+    if (import.meta.env.DEV) {
+      try {
+        const response = await fetch('/__museum-animal-presentation', {
+          body: JSON.stringify({
+            animalId: activeAnimal.id,
+            presentation: {
+              viewAzimuthDegrees: view.azimuthDegrees,
+              viewDistanceScale: view.distanceScale,
+              viewPolarDegrees: view.polarDegrees,
+            },
+          }),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        })
+        if (!response.ok) {
+          throw new Error(`save failed: ${response.status}`)
+        }
+        showToast(messages.viewSaved)
+      } catch {
+        showToast(messages.viewSavedLocally)
+      }
+    } else {
+      showToast(messages.viewSaved)
+    }
+  }
   useEffect(() => {
     if (
       pageKindRef.current === 'animal-detail' ||
@@ -2566,6 +2622,14 @@ function MuseumApp({
                 <span>{messages.scaleEncounter.open}</span>
               </button>
             ) : null}
+            {!localReviewMode ? (
+              <IconButton
+                disabled={!modelReady}
+                icon={Save}
+                label={messages.saveView}
+                onClick={() => void saveCurrentView()}
+              />
+            ) : null}
             <IconButton
               icon={RotateCcw}
               label={messages.resetView}
@@ -2602,6 +2666,11 @@ function MuseumApp({
           </>
         )}
       </section>
+      {saveViewToast ? (
+        <p className="stage-toast" role="status">
+          {saveViewToast}
+        </p>
+      ) : null}
 
       {!focusMode ? (
         <section

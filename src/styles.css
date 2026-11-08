@@ -1422,6 +1422,39 @@ html[data-model-preview-capture] .viewer-host::after {
   gap: 8px;
 }
 
+.stage-toast {
+  position: absolute;
+  z-index: 9;
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%;
+  margin: 0;
+  padding: 9px 18px;
+  border-radius: 999px;
+  color: #fffdf7;
+  background: rgb(53 104 89 / 94%);
+  box-shadow: 0 10px 26px rgb(37 56 32 / 26%);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: stage-toast-in 220ms ease-out;
+  pointer-events: none;
+}
+
+@keyframes stage-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+
 .icon-button {
   position: relative;
   display: inline-flex;

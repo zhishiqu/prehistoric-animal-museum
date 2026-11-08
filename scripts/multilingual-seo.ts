@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path'
 
 import sharp from 'sharp'
 import type { Plugin } from 'vite'
+import { tsImport } from 'tsx/esm/api'
 
 import { loadAnimalDefinitions } from './content-data'
 import { animalSeoDescription, animalSeoTitle } from '../src/content/animal-seo'
@@ -83,7 +84,7 @@ const defaultOptions = {
 } satisfies Required<MultilingualSeoOptions>
 
 const selectedCatalogueIds = new Set<string>(mainCollection.animalIds)
-const canonicalAnimalDefinitions = (await loadAnimalDefinitions(mainCollection.animalIds))
+const canonicalAnimalDefinitions = (await loadAnimalDefinitions(mainCollection.animalIds, moduleUrl => tsImport(moduleUrl, { parentURL: import.meta.url })))
   .filter(({ definition }) => selectedCatalogueIds.has(definition.id))
   .map(({ definition }) => {
     if (!definition.content['zh-CN'] || !definition.content.en) {
